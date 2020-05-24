@@ -24,7 +24,7 @@ class SingleFileBugFinder(dir: String) : BugFinder(dir) {
     fun findBugsInFile() {
         try {
             println("Let's go")
-            ++counter
+            //++counter
             log.debug("Name = $dir")
             val psiCreator = PSICreator("")
             val psiFile =
@@ -34,7 +34,7 @@ class SingleFileBugFinder(dir: String) : BugFinder(dir) {
                     println("e = $e")
                     return
                 }
-
+/*
             val compilersConf = BBFProperties.getStringGroupWithoutQuotes("BACKENDS")
             val filterBackends = compilersConf.map { it.key }
             val ignoreBackendsFromFile =
@@ -50,21 +50,23 @@ class SingleFileBugFinder(dir: String) : BugFinder(dir) {
                 return
             }
             if (psiFile.getAllPSIChildrenOfType<KtNamedFunction>().all { it.name?.contains("box") == false }) return
-
+*/
             //Init lateinit vars
             Factory.file = psiFile
             Transformation.checker = MutationChecker(compilers)
-
+/*
             //Check for compiling
             if (!compilers.checkCompilingForAllBackends(psiFile)) {
                 log.debug("Could not compile $dir")
                 return
             }
+
+ */
             log.debug("Start to mutate")
             val resultingMutant = makeMutant(psiFile, psiCreator.ctx!!, null, listOf(::noBoxFunModifying))
             //Mutator(psiFile, psiCreator.ctx).startMutate()
             //val resultingMutant = PSICreator("").getPSIForText(Transformation.file.text)
-
+/*
             if (!compilers.checkCompilingForAllBackends(resultingMutant)) {
                 log.debug("Could not compile after mutation $dir")
                 log.debug(resultingMutant.text)
@@ -105,6 +107,8 @@ class SingleFileBugFinder(dir: String) : BugFinder(dir) {
 //                            traced.text
                 BugManager.saveBug(res, "", Project(traced.text), BugType.DIFFBEHAVIOR)
             }
+
+ */
             return
         } catch (e: Error) {
             println("ERROR: $e")
@@ -114,5 +118,5 @@ class SingleFileBugFinder(dir: String) : BugFinder(dir) {
         }
     }
 
-    var counter = 0
+    //var counter = 0
 }

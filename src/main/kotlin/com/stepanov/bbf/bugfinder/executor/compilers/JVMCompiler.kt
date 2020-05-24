@@ -1,5 +1,8 @@
 package com.stepanov.bbf.bugfinder.executor.compilers
 
+import com.stepanov.bbf.bugfinder.duplicator.CoverageComparator
+import com.stepanov.bbf.bugfinder.duplicator.CoverageReportMaker
+import com.stepanov.bbf.bugfinder.duplicator.Instrumenter
 import com.stepanov.bbf.bugfinder.executor.CommonCompiler
 import com.stepanov.bbf.bugfinder.executor.CompilerArgs
 import com.stepanov.bbf.bugfinder.executor.CompilingResult
@@ -19,6 +22,9 @@ import org.jetbrains.kotlin.config.Services
 import org.jetbrains.kotlin.utils.PathUtil
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -43,8 +49,56 @@ open class JVMCompiler(open val arguments: String = "") : CommonCompiler() {
         return status.combinedOutput to status.locations
     }
 
-    override fun isCompilerBug(pathToFile: String): Boolean =
-        tryToCompile(pathToFile).hasException
+    override fun isCompilerBug(pathToFile: String): Boolean {
+        val status = tryToCompile(pathToFile)
+
+        val simPath = ""
+        val simList = File(simPath).readText().split("\n")
+
+        if (!MsgCollector.hasCompileError && !status.hasTimeout && !MsgCollector.hasException) {
+            val tempPath = ""
+            val tempFile = File.createTempFile("mutant", ".kt", File(tempPath))
+            val tempCoveragePath = ""
+            tempFile.writeText(File(pathToFile).readText())
+            val fileExec = Instrumenter(tempFile.absolutePath).instrument()
+            CoverageReportMaker(tempCoveragePath, fileExec).createReport()
+            val sim = CoverageComparator().computeSimilarity(tempCoveragePath).toDouble()
+            if (sim < 0.81 || simList.contains(sim.toString())) {
+                println("IGNORE Pass similarity = $sim; Mutant = ${tempFile.name}")
+                Files.delete(Paths.get(tempFile.absolutePath))
+                Files.delete(Paths.get(tempCoveragePath))
+            }
+            else {
+                println("ADD Pass similarity = $sim; Mutant = ${tempFile.name}")
+                Files.write(Paths.get(simPath), (sim.toString() + "\n").toByteArray(), StandardOpenOption.APPEND);
+            }
+        }
+
+/*
+        val simPath = ""
+        val simList = File(simPath).readText().split("\n")
+        if (MsgCollector.hasException) {
+            val tempPath = ""
+            val tempFile = File.createTempFile("mutant", ".kt", File(tempPath))
+            val tempCoveragePath = ""
+            tempFile.writeText(File(pathToFile).readText())
+            val fileExec = Instrumenter(tempFile.absolutePath).instrument()
+            CoverageReportMaker(tempCoveragePath, fileExec).createReport()
+            val sim = CoverageComparator().computeSimilarity(tempCoveragePath).toDouble()
+            if (sim < 0.85 || simList.contains(sim.toString())) {
+                println("IGNORE Fail similarity = $sim; Mutant = ${tempFile.name}")
+                Files.delete(Paths.get(tempFile.absolutePath))
+                Files.delete(Paths.get(tempCoveragePath))
+            }
+            else {
+                println("ADD Fail similarity = $sim; Mutant = ${tempFile.name}")
+                Files.write(Paths.get(simPath), (sim.toString() + "\n").toByteArray(), StandardOpenOption.APPEND);
+            }
+        }
+*/
+        return MsgCollector.hasException
+
+    }
 
 //    override fun compile(path: String): CompilingResult {
 //        val kotlinc = CompilerArgs.pathToKotlinc

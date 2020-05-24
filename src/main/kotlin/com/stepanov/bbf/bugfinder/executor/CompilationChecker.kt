@@ -13,6 +13,32 @@ open class CompilationChecker(private val compilers: List<CommonCompiler>) : Che
     override fun isCompilationSuccessful(project: Project): Boolean {
         val path = project.saveOrRemoveToTmp(true)
         val res = compilers.all { it.checkCompiling(path) }
+
+        ///
+        /*
+        val simPath = ""
+        val simList = File(simPath).readText().split("\n")
+        if (res) {
+            val tempPath = ""
+            val tempFile = File.createTempFile("mutant", ".kt", File(tempPath))
+            val tempCoveragePath = ""
+            tempFile.writeText(File(path).readText())
+            val fileExec = Instrumenter(tempFile.absolutePath).instrument()
+            CoverageReportMaker(tempCoveragePath, fileExec).createReport()
+            val sim = CoverageComparator().computeSimilarity(tempCoveragePath).toDouble()
+            if (sim < 0.81 || simList.contains(sim.toString())) {
+                println("IGNORE Pass similarity = $sim; Mutant = ${tempFile.name}")
+                Files.delete(Paths.get(tempFile.absolutePath))
+                Files.delete(Paths.get(tempCoveragePath))
+            }
+            else {
+                println("ADD Pass similarity = $sim; Mutant = ${tempFile.name}")
+                Files.write(Paths.get(simPath), (sim.toString() + "\n").toByteArray(), StandardOpenOption.APPEND);
+            }
+        }
+         */
+        ///
+
         project.saveOrRemoveToTmp(false)
         return res
     }
