@@ -6,6 +6,7 @@ import com.stepanov.bbf.bugfinder.duplicator.Instrumenter
 import com.stepanov.bbf.bugfinder.executor.CommonCompiler
 import com.stepanov.bbf.bugfinder.executor.CompilerArgs
 import com.stepanov.bbf.bugfinder.executor.CompilingResult
+import com.stepanov.bbf.bugfinder.mutator.transformations.Factory
 import com.stepanov.bbf.bugfinder.util.Stream
 import com.stepanov.bbf.bugfinder.util.copyFullJarImpl
 import com.stepanov.bbf.bugfinder.util.copyJarImpl
@@ -52,23 +53,29 @@ open class JVMCompiler(open val arguments: String = "") : CommonCompiler() {
     override fun isCompilerBug(pathToFile: String): Boolean {
         val status = tryToCompile(pathToFile)
 
-        val simPath = ""
+        val file = Factory.file.name
+        val path = file.substring(0, file.length - 3)
+
+        val backend = path.split("/").last().split("_").first() == "BACKEND"
+        var partName = ""
+        if (backend) partName = "BACKEND_"
+
+        val simPath = "$path/similarity-list-pass.txt"
         val simList = File(simPath).readText().split("\n")
 
         if (!MsgCollector.hasCompileError && !status.hasTimeout && !MsgCollector.hasException) {
-            val tempPath = ""
-            val tempFile = File.createTempFile("mutant", ".kt", File(tempPath))
-            val tempCoveragePath = ""
+            val tempPath = "$path/mutant"
+            val tempFile = File.createTempFile(partName + "mutant", ".kt", File(tempPath))
+            val tempCoveragePath = "$path/coverage/${tempFile.nameWithoutExtension}.csv"
             tempFile.writeText(File(pathToFile).readText())
             val fileExec = Instrumenter(tempFile.absolutePath).instrument()
             CoverageReportMaker(tempCoveragePath, fileExec).createReport()
-            val sim = CoverageComparator().computeSimilarity(tempCoveragePath).toDouble()
-            if (sim < 0.81 || simList.contains(sim.toString())) {
+            val sim = CoverageComparator().computeSimilarity(tempCoveragePath, "$path/${path.split("/").last()}.csv").toDouble()
+            if (sim < 0.77 || simList.contains(sim.toString())) {
                 println("IGNORE Pass similarity = $sim; Mutant = ${tempFile.name}")
                 Files.delete(Paths.get(tempFile.absolutePath))
                 Files.delete(Paths.get(tempCoveragePath))
-            }
-            else {
+            } else {
                 println("ADD Pass similarity = $sim; Mutant = ${tempFile.name}")
                 Files.write(Paths.get(simPath), (sim.toString() + "\n").toByteArray(), StandardOpenOption.APPEND);
             }

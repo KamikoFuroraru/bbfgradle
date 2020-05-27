@@ -29,7 +29,7 @@ import java.util.*
 
 class CoverageReportMaker(val pathToCoverageReport: String, val pathToJacocoExec: String) {
 
-    private val pathToKotlinCompilerJAR = ""
+    private val pathToKotlinCompilerJAR = "/home/vera/Downloads/kotlin-build-1.3.72-release-483/dist/kotlinc/lib/kotlin-compiler.jar"
 
     fun createReport() {
         val executionDataFile = File(pathToJacocoExec)

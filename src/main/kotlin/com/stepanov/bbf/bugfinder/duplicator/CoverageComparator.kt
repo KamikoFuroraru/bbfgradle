@@ -15,7 +15,7 @@ class CoverageComparator() {
         println(relation)
     }
 
-    fun computeSimilarity(mutantProgram: String, inputProgramCsv: String = ""): String {
+    fun computeSimilarity(mutantProgram: String, inputProgramCsv: String): String {
         return if (File(mutantProgram).isDirectory) computeSimilarityBtwAllPrograms(mutantProgram, inputProgramCsv)
         else computeSimilarityBtw2Programs(mutantProgram, inputProgramCsv).toString()
     }
