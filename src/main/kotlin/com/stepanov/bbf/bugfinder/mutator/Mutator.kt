@@ -56,7 +56,7 @@ class Mutator(val file: PsiFile, val context: BindingContext?) {
         try {
             val f: Future<String> = service.submit<String> {
                 var i = 1
-                while (i != 10) {
+                while (i != 20) {
                     println("Try number: $i")
                     //Set of transformations over PSI
                     log.debug("File = ${file.name}")

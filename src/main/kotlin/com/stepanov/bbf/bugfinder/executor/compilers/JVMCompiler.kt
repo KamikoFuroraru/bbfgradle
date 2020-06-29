@@ -56,9 +56,10 @@ open class JVMCompiler(open val arguments: String = "") : CommonCompiler() {
         val file = Factory.file.name
         val path = file.substring(0, file.length - 3)
 
-        val backend = path.split("/").last().split("_").first() == "BACKEND"
+        val name = path.split("/").last().split("_").first()
         var partName = ""
-        if (backend) partName = "BACKEND_"
+        if (name == "BACKEND") partName = "BACKEND_"
+        else if (name == "FRONTEND") partName = "FRONTEND_"
 
         val simPath = "$path/similarity-list-pass.txt"
         val simList = File(simPath).readText().split("\n")
@@ -71,7 +72,7 @@ open class JVMCompiler(open val arguments: String = "") : CommonCompiler() {
             val fileExec = Instrumenter(tempFile.absolutePath).instrument()
             CoverageReportMaker(tempCoveragePath, fileExec).createReport()
             val sim = CoverageComparator().computeSimilarity(tempCoveragePath, "$path/${path.split("/").last()}.csv").toDouble()
-            if (sim < 0.77 || simList.contains(sim.toString())) {
+            if (sim < 0.7 || simList.contains(sim.toString())) {
                 println("IGNORE Pass similarity = $sim; Mutant = ${tempFile.name}")
                 Files.delete(Paths.get(tempFile.absolutePath))
                 Files.delete(Paths.get(tempCoveragePath))
